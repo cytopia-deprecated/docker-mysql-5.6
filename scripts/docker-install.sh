@@ -88,14 +88,7 @@ run "yum -y update"
 ###
 print_headline "4. Installing Packages"
 run "yum -y install \
-	mysql-community-client \
-	mysql-community-common \
-	mysql-community-devel \
-	mysql-community-embedded \
-	mysql-community-libs \
-	mysql-community-libs-compat \
-	mysql-community-server \
-	mysql-community-test
+	mysql-community-server
 	"
 
 
@@ -118,10 +111,12 @@ if [ ! -d "${MYSQL_DEF_LOG}"  ]; then run "mkdir -p ${MYSQL_DEF_LOG}" ; fi
 run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_DAT}"
 run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_SCK}"
 run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_PID}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_LOG}"
 
 run "chmod 777 ${MYSQL_DEF_DAT}"
 run "chmod 777 ${MYSQL_DEF_SCK}"
 run "chmod 777 ${MYSQL_DEF_PID}"
+run "chmod 777 ${MYSQL_DEF_LOG}"
 
 
 # Add default config
@@ -159,4 +154,11 @@ run "yum -y autoremove"
 ###
 print_headline "7. Fix Cleanup"
 run "yum -y install hostname" # required for mysql_install_db
+
+
+###
+### Clear Caches
+###
+print_headline "8. Clear Caches"
+run "yum clean all"
 
