@@ -253,7 +253,7 @@ else
 
 
 	# Install Database
-	run "mysql_install_db --datadir=${DB_DATA_DIR} --user=${DB_USER}"
+	run "mysql_install_db --datadir=${DB_DATA_DIR} --user=${MY_USER}"
 
 
 	# Start server
