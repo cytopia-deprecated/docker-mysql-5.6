@@ -57,6 +57,13 @@ install:
   - docker build -t cytopia/${MY_DOCKER_NAME} .
 
 
+before_script:
+
+  # Disable services enabled by default
+  # http://docs.travis-ci.com/user/database-setup/#MySQL
+  - sudo /etc/init.d/mysql stop
+  - sudo /etc/init.d/postgresql stop
+
 
 ###
 ### Test
@@ -72,7 +79,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -95,7 +102,7 @@ script:
       -p 127.0.0.1:3306:3306
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -110,7 +117,6 @@ script:
   - docker rm "${MY_DOCKER_NAME}"
 
 
-
   ################################################################################
   ## 02.) [a](DEBUG) With logging
   ################################################################################
@@ -122,7 +128,7 @@ script:
       -e MYSQL_GENERAL_LOG=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -153,7 +159,7 @@ script:
       -e MYSQL_GENERAL_LOG=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -175,7 +181,6 @@ script:
   - docker rm "${MY_DOCKER_NAME}"
 
 
-
   ################################################################################
   ## 03.) [a](DEBUG) With config overwrite
   ################################################################################
@@ -188,7 +193,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -217,7 +222,7 @@ script:
       -v /tmp/mysql-conf:/etc/mysql/conf.d
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -236,7 +241,6 @@ script:
   - rm -f /tmp/mysql-conf/buffer.cnf
 
 
-
   ################################################################################
   ## 04.) [a](DEBUG) Change socket path
   ################################################################################
@@ -247,7 +251,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -273,7 +277,7 @@ script:
       -e MYSQL_SOCKET_DIR=/usr/local/mysqld-sock
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -291,7 +295,6 @@ script:
   - docker rm "${MY_DOCKER_NAME}"
 
 
-
   ################################################################################
   ## 05.) [a](DEBUG) Mount database dir and re-use it
   ################################################################################
@@ -304,7 +307,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -322,7 +325,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -343,7 +346,7 @@ script:
       -e MYSQL_SOCKET_DIR=/usr/local/mysqld-sock
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -361,7 +364,7 @@ script:
       -e DEBUG_COMPOSE_ENTRYPOINT=1
       -e MYSQL_ROOT_PASSWORD=${MY_MYSQL_PASS}
       --name ${MY_DOCKER_NAME} cytopia/${MY_DOCKER_NAME} &
-  - sleep 15
+  - sleep 25
 
   - docker ps
 
@@ -370,3 +373,25 @@ script:
 
   - docker stop "$( docker ps | grep  "${MY_DOCKER_NAME}" | awk '{print $1}' )"
   - docker rm "${MY_DOCKER_NAME}"
+
+
+  ################################################################################
+  ## 06.) Test on devilbox
+  ################################################################################
+  - /tmp/section.sh "06.) Test on devilbox"
+  - git clone -v https://github.com/cytopia/devilbox
+  - cd devilbox
+  - cp env-example .env
+  - sed -i'' 's/^MYSQL_SERVER=/#MYSQL_SERVER=/g' .env
+  - echo "MYSQL_SERVER=${MY_DOCKER_NAME}" >> .env
+  - docker-compose up -d
+  - sleep 30
+  - docker-compose logs
+  - docker-compose ps
+  - _broken="$( docker-compose ps | grep -c 'Exit' || true )"
+  - _running="$( docker-compose ps | grep -c 'Up' )"
+  - _total="$( docker-compose ps -q | grep -c '' )"
+  - if [ "${_broken}" != "0" ]; then false; fi
+  - if [ "${_running}" != "${_total}" ]; then false; fi
+  - _count="$( curl -q localhost 2>/dev/null | grep -c OK )"
+  - if [ "${_count}" != "4" ]; then false; fi

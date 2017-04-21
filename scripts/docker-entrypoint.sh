@@ -5,10 +5,6 @@
 ###
 DEBUG_COMMANDS=0
 
-DB_USER="mysql"
-DB_GROUP="mysql"
-DB_CUSTOM_CONF_DIR="/etc/mysql/docker-default.d"
-
 
 ###
 ### Functions
@@ -176,12 +172,12 @@ log "info" "Docker date set to: $(date)"
 ###
 
 # MYSQL_GENERAL_LOG
-set_mysql_custom_settings "mysqld" "general-log" "MYSQL_GENERAL_LOG" "" "${DB_CUSTOM_CONF_DIR}/logging.cnf"
+set_mysql_custom_settings "mysqld" "general-log" "MYSQL_GENERAL_LOG" "" "${MYSQL_CUST_INCL}/logging.cnf"
 
 # MYSQL_SOCKET_DIR
-set_mysql_custom_settings "client" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${DB_CUSTOM_CONF_DIR}/socket.cnf"
-set_mysql_custom_settings "mysql"  "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${DB_CUSTOM_CONF_DIR}/socket.cnf"
-set_mysql_custom_settings "mysqld" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${DB_CUSTOM_CONF_DIR}/socket.cnf"
+set_mysql_custom_settings "client" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_CUST_INCL}/socket.cnf"
+set_mysql_custom_settings "mysql"  "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_CUST_INCL}/socket.cnf"
+set_mysql_custom_settings "mysqld" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_CUST_INCL}/socket.cnf"
 
 # Take care about custom socket directories
 if set | grep "^MYSQL_SOCKET_DIR=" >/dev/null 2>&1; then
@@ -196,8 +192,8 @@ if set | grep "^MYSQL_SOCKET_DIR=" >/dev/null 2>&1; then
 	fi
 
 	# Set socket permission
-	run "chown ${DB_USER}:${DB_GROUP} ${MYSQL_SOCKET_DIR}"
-	run "chmod 777 ${MYSQL_SOCKET_DIR}"
+	run "chown ${MY_USER}:${MY_GROUP} ${MYSQL_SOCKET_DIR}"
+	run "chmod 0777 ${MYSQL_SOCKET_DIR}"
 fi
 
 
@@ -214,6 +210,31 @@ DB_DATA_DIR="$( get_mysql_default_config "datadir" )"
 ## INSTALLATION
 ##
 
+# Fixing permissions
+if [ ! -f "${MYSQL_LOG_QUERY}" ]; then
+	run "touch ${MYSQL_LOG_QUERY}"
+fi
+if [ ! -f "${MYSQL_LOG_SLOW}" ]; then
+	run "touch ${MYSQL_LOG_SLOW}"
+fi
+if [ ! -f "${MYSQL_LOG_ERROR}" ]; then
+	run "touch ${MYSQL_LOG_ERROR}"
+fi
+
+run "chown -R ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_DAT}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_LOG}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_PID}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_SCK}"
+
+run "chmod 0775 ${DB_DATA_DIR}"
+run "chmod 0775 ${MYSQL_DEF_DAT}"
+run "chmod 0775 ${MYSQL_DEF_LOG}"
+run "chmod 0775 ${MYSQL_DEF_PID}"
+run "chmod 0775 ${MYSQL_DEF_SCK}"
+
+run "find ${MYSQL_DEF_LOG}/ -type f -exec chmod 0664 {} \;"
+
 # Directory already exists and has content (other thab '.' and '..')
 if [ -d "${DB_DATA_DIR}/mysql" ] && [ "$( ls -A "${DB_DATA_DIR}/mysql" )" ]; then
 	log "info" "Found existing data directory. MySQL already setup."
@@ -226,7 +247,8 @@ else
 	if [ ! -d "${DB_DATA_DIR}" ]; then
 		log "info" "Creating empty data directory in: ${DB_DATA_DIR}."
 		run "mkdir -p ${DB_DATA_DIR}"
-		run "chown -R ${DB_USER}:${DB_GROUP} ${DB_DATA_DIR}"
+		run "chown -R ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
+		run "chmod 0777 ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
 	fi
 
 
@@ -271,7 +293,7 @@ else
 
 	# Shutdown MySQL
 	log "info" "Shutting down MySQL."
-	kill -s TERM "$pid"
+	run "kill -s TERM ${pid}"
 	i=0
 	max=60
 	while [ $i -lt $max ]; do
@@ -299,4 +321,4 @@ fi
 ### Start
 ###
 log "info" "Starting $(mysqld --version)"
-run "mysqld" "1"
+exec mysqld
