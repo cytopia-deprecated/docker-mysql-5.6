@@ -1,6 +1,6 @@
 # MySQL 5.6 Docker
 
-<small>**Latest build:** 2017-07-01</small>
+<small>**Latest build:** 2017-08-30</small>
 
 [![Build Status](https://travis-ci.org/cytopia/docker-mysql-5.6.svg?branch=master)](https://travis-ci.org/cytopia/docker-mysql-5.6) [![](https://images.microbadger.com/badges/version/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6") [![](https://images.microbadger.com/badges/image/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6") [![](https://images.microbadger.com/badges/license/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6")
 
@@ -124,4 +124,4 @@ Configuration files inside this docker are read in the following order:
 
 **[Version]**
 
-mysqld  Ver 5.6.36 for Linux on x86_64 (MySQL Community Server (GPL))
+mysqld  Ver 5.6.37 for Linux on x86_64 (MySQL Community Server (GPL))
