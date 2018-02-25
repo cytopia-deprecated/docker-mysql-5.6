@@ -1,6 +1,6 @@
 # MySQL 5.6 Docker
 
-<small>**Latest build:** 2017-08-30</small>
+<small>**Latest build:** 2017-09-28</small>
 
 [![Build Status](https://travis-ci.org/cytopia/docker-mysql-5.6.svg?branch=master)](https://travis-ci.org/cytopia/docker-mysql-5.6) [![](https://images.microbadger.com/badges/version/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6") [![](https://images.microbadger.com/badges/image/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6") [![](https://images.microbadger.com/badges/license/cytopia/mysql-5.6.svg)](https://microbadger.com/images/cytopia/mysql-5.6 "mysql-5.6")
 
